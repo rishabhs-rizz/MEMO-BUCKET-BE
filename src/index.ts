@@ -77,10 +77,13 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
   const link = req.body.link;
   const ContentType = req.body.ContentType; // youtube or twitter
 
+  console.log("ContentType", ContentType);
+
   await ContentModel.create({
     link,
     title,
     userId: req.userId,
+    ContentType,
     // tags: []
   });
   res.json({

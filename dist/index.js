@@ -80,10 +80,12 @@ app.post("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaite
     const title = req.body.title;
     const link = req.body.link;
     const ContentType = req.body.ContentType; // youtube or twitter
+    console.log("ContentType", ContentType);
     yield db_1.ContentModel.create({
         link,
         title,
         userId: req.userId,
+        ContentType,
         // tags: []
     });
     res.json({
