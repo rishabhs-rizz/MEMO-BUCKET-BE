@@ -7,17 +7,19 @@ exports.userMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const config_1 = require("./config");
 const userMiddleware = (req, res, next) => {
-    const header = req.headers.authorization;
-    const decoded = jsonwebtoken_1.default.verify(header, config_1.JWT_SECRET);
-    if (decoded) {
-        //@ts-ignore
+    var _a;
+    const token = (_a = req.headers.authorization) === null || _a === void 0 ? void 0 : _a.split(" ")[1];
+    if (!token) {
+        res.status(401).json({ message: "Unauthorized" });
+        return;
+    }
+    try {
+        const decoded = jsonwebtoken_1.default.verify(token, config_1.JWT_SECRET);
         req.userId = decoded.id;
         next();
     }
-    else {
-        res.status(403).json({
-            message: "you,re not logged in",
-        });
+    catch (err) {
+        res.status(401).json({ message: "Invalid token" });
     }
 };
 exports.userMiddleware = userMiddleware;
