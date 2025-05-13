@@ -46,26 +46,28 @@ app.post("/api/v1/signup", async (req, res) => {
 });
 
 app.post("/api/v1/signin", async (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+  try {
+    const username = req.body.username;
+    const password = req.body.password;
 
-  const ExistingUser = await UserModel.findOne({
-    username,
-  });
-
-  if (ExistingUser) {
-    const token = jwt.sign(
-      {
-        id: ExistingUser._id,
-      },
-      JWT_SECRET
-    );
-
-    res.json({
-      token: token,
-      message: "bery well signed in Mr.",
+    const ExistingUser = await UserModel.findOne({
+      username,
     });
-  } else {
+
+    if (ExistingUser) {
+      const token = jwt.sign(
+        {
+          id: ExistingUser._id,
+        },
+        JWT_SECRET
+      );
+
+      res.json({
+        token: token,
+        message: "bery well signed in Mr.",
+      });
+    }
+  } catch (e) {
     res.json({
       message: "incorrect credentials",
     });
@@ -84,7 +86,6 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     title,
     userId: req.userId,
     ContentType,
-    // tags: []
   });
   res.json({
     link,
@@ -110,24 +111,29 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
 app.delete("/api/v1/content", (req, res) => {});
 
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
-  const share = req.body.share;
-  if (share) {
-    const link = Random(10);
-    await LinkModel.create({
-      userId: req.userId,
-      hash: link,
-    });
-    res.json({
-      message: "link created",
-      link: link,
-    });
-  } else {
-    await LinkModel.deleteOne({
-      userId: req.userId,
-    });
+  const link = Random(10);
+  try {
+    const existing = await LinkModel.findOne({ userId: req.userId });
 
+    if (existing) {
+      res.json({
+        message: "link already exists",
+        link: existing.hash,
+      });
+    } else {
+      const newLink = await LinkModel.create({
+        userId: req.userId,
+        hash: link,
+      });
+      res.json({
+        message: "link created",
+        link: newLink.hash,
+      });
+    }
+  } catch (e) {
+    console.log(e);
     res.json({
-      message: "link deleted",
+      message: "link already exists",
     });
   }
 });
@@ -143,7 +149,6 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
     res.status(411).json({
       message: "incorrect input",
     });
-    return;
   }
 
   const contentEntryinDB = await ContentModel.find({
@@ -157,7 +162,6 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
     res.status(411).json({
       message: "user not found, error should ideally not happen",
     });
-    return;
   }
 
   res.json({

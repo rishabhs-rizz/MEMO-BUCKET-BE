@@ -1,21 +1,25 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { JWT_SECRET } from "./config";
 
 export const userMiddleware = (
   req: Request,
   res: Response,
   next: NextFunction
-) => {
-  const header = req.headers.authorization;
-  const decoded = jwt.verify(header as string, JWT_SECRET);
-  if (decoded) {
-    //@ts-ignore
+): void => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) {
+    res.status(401).json({ message: "Unauthorized" });
+    return;
+  }
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as {
+      id: mongoose.Types.ObjectId;
+    };
     req.userId = decoded.id;
     next();
-  } else {
-    res.status(403).json({
-      message: "you,re not logged in",
-    });
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token" });
   }
 };

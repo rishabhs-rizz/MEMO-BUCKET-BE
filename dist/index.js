@@ -56,21 +56,23 @@ app.post("/api/v1/signup", (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
 }));
 app.post("/api/v1/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const username = req.body.username;
-    const password = req.body.password;
-    const ExistingUser = yield db_1.UserModel.findOne({
-        username,
-    });
-    if (ExistingUser) {
-        const token = jsonwebtoken_1.default.sign({
-            id: ExistingUser._id,
-        }, config_1.JWT_SECRET);
-        res.json({
-            token: token,
-            message: "bery well signed in Mr.",
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
+        const ExistingUser = yield db_1.UserModel.findOne({
+            username,
         });
+        if (ExistingUser) {
+            const token = jsonwebtoken_1.default.sign({
+                id: ExistingUser._id,
+            }, config_1.JWT_SECRET);
+            res.json({
+                token: token,
+                message: "bery well signed in Mr.",
+            });
+        }
     }
-    else {
+    catch (e) {
         res.json({
             message: "incorrect credentials",
         });
@@ -86,7 +88,6 @@ app.post("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaite
         title,
         userId: req.userId,
         ContentType,
-        // tags: []
     });
     res.json({
         link,
@@ -108,24 +109,30 @@ app.get("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaiter
 }));
 app.delete("/api/v1/content", (req, res) => { });
 app.post("/api/v1/brain/share", middlewares_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const share = req.body.share;
-    if (share) {
-        const link = (0, utils_1.Random)(10);
-        yield db_1.LinkModel.create({
-            userId: req.userId,
-            hash: link,
-        });
-        res.json({
-            message: "link created",
-            link: link,
-        });
+    const link = (0, utils_1.Random)(10);
+    try {
+        const existing = yield db_1.LinkModel.findOne({ userId: req.userId });
+        if (existing) {
+            res.json({
+                message: "link already exists",
+                link: existing.hash,
+            });
+        }
+        else {
+            const newLink = yield db_1.LinkModel.create({
+                userId: req.userId,
+                hash: link,
+            });
+            res.json({
+                message: "link created",
+                link: newLink.hash,
+            });
+        }
     }
-    else {
-        yield db_1.LinkModel.deleteOne({
-            userId: req.userId,
-        });
+    catch (e) {
+        console.log(e);
         res.json({
-            message: "link deleted",
+            message: "link already exists",
         });
     }
 }));
@@ -138,7 +145,6 @@ app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void
         res.status(411).json({
             message: "incorrect input",
         });
-        return;
     }
     const contentEntryinDB = yield db_1.ContentModel.find({
         userId: LinkEntryinDB === null || LinkEntryinDB === void 0 ? void 0 : LinkEntryinDB.userId,
@@ -150,7 +156,6 @@ app.get("/api/v1/brain/:shareLink", (req, res) => __awaiter(void 0, void 0, void
         res.status(411).json({
             message: "user not found, error should ideally not happen",
         });
-        return;
     }
     res.json({
         username: userEntentryinDB === null || userEntentryinDB === void 0 ? void 0 : userEntentryinDB.username,
