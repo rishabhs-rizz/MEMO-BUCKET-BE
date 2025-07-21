@@ -49,7 +49,12 @@ const Contentschema = new mongoose_1.Schema({
 });
 const Linkschema = new mongoose_1.Schema({
     hash: String,
-    userId: { type: mongoose_1.default.Types.ObjectId, ref: "User", required: true },
+    userId: {
+        type: mongoose_1.default.Types.ObjectId,
+        ref: "User",
+        required: true,
+        unique: true,
+    },
 });
 exports.LinkModel = mongoose_1.default.model("Links", Linkschema);
 exports.ContentModel = mongoose_1.default.model("content", Contentschema);

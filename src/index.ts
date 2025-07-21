@@ -87,11 +87,18 @@ app.post("/api/v1/content", userMiddleware, async (req, res) => {
     userId: req.userId,
     ContentType,
   });
-  res.json({
+
+  const requiredCardContent = await ContentModel.findOne({
     link,
-    type: ContentType,
     title,
-    id: req.userId,
+    userId: req.userId,
+  });
+  res.json({
+    link: requiredCardContent?.link,
+    CardID: requiredCardContent?._id,
+    type: requiredCardContent?.ContentType,
+    title: requiredCardContent?.title,
+    id: requiredCardContent?.userId,
   });
 });
 
@@ -108,7 +115,17 @@ app.get("/api/v1/content", userMiddleware, async (req, res) => {
   }
 });
 
-app.delete("/api/v1/content", (req, res) => {});
+app.delete("/api/v1/content", (req, res) => {
+  const contentId = req.body.contentId; // <- Read from body
+  ContentModel.deleteOne({ _id: contentId })
+    .then(() => {
+      res.json({ message: "Content deleted successfully" });
+    })
+    .catch((error) => {
+      console.error("Error deleting content:", error);
+      res.status(500).json({ message: "Error deleting content" });
+    });
+});
 
 app.post("/api/v1/brain/share", userMiddleware, async (req, res) => {
   const link = Random(10);

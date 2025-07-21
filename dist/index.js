@@ -89,11 +89,17 @@ app.post("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaite
         userId: req.userId,
         ContentType,
     });
-    res.json({
+    const requiredCardContent = yield db_1.ContentModel.findOne({
         link,
-        type: ContentType,
         title,
-        id: req.userId,
+        userId: req.userId,
+    });
+    res.json({
+        link: requiredCardContent === null || requiredCardContent === void 0 ? void 0 : requiredCardContent.link,
+        CardID: requiredCardContent === null || requiredCardContent === void 0 ? void 0 : requiredCardContent._id,
+        type: requiredCardContent === null || requiredCardContent === void 0 ? void 0 : requiredCardContent.ContentType,
+        title: requiredCardContent === null || requiredCardContent === void 0 ? void 0 : requiredCardContent.title,
+        id: requiredCardContent === null || requiredCardContent === void 0 ? void 0 : requiredCardContent.userId,
     });
 }));
 app.get("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -107,7 +113,17 @@ app.get("/api/v1/content", middlewares_1.userMiddleware, (req, res) => __awaiter
         });
     }
 }));
-app.delete("/api/v1/content", (req, res) => { });
+app.delete("/api/v1/content", (req, res) => {
+    const contentId = req.body.contentId; // <- Read from body
+    db_1.ContentModel.deleteOne({ _id: contentId })
+        .then(() => {
+        res.json({ message: "Content deleted successfully" });
+    })
+        .catch((error) => {
+        console.error("Error deleting content:", error);
+        res.status(500).json({ message: "Error deleting content" });
+    });
+});
 app.post("/api/v1/brain/share", middlewares_1.userMiddleware, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const link = (0, utils_1.Random)(10);
     try {
