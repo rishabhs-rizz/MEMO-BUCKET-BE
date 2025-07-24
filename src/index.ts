@@ -187,6 +187,36 @@ app.get("/api/v1/brain/:shareLink", async (req, res) => {
   });
 });
 
+app.get(
+  "/api/v1/brain/content/:contentType",
+  userMiddleware,
+  async (req, res) => {
+    try {
+      const contentType = req.params.contentType;
+      console.log("Fetching content of type:", contentType);
+      console.log("User ID:", req.userId);
+      const content = await ContentModel.find({
+        userId: req.userId,
+        ContentType: contentType,
+      });
+
+      if (content.length === 0) {
+        res.status(404).json({
+          message: "No content found for this type",
+        });
+        return;
+      }
+
+      res.json({ content });
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      res.status(500).json({
+        message: "Failed to fetch content. Please try again later.",
+      });
+    }
+  }
+);
+
 async function Main() {
   await mongoose.connect(
     "mongodb+srv://rishabhshukla2924:rish7985@cluster0.bmmtb.mongodb.net/SecondBrain-app"
